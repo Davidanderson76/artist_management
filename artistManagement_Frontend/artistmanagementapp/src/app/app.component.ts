@@ -12,10 +12,11 @@ import { ArtistService } from './artist.service';
 export class AppComponent implements OnInit {
   public artists: Artist[];
   public editArtist: Artist;
-  public deleteArtists: Artist;
+  public deleteArtist: Artist;
 
   constructor(private artistService: ArtistService) {}
-  ngOnInit(...args: []) {
+
+  ngOnInit() {
     this.getArtists();
   }
 
@@ -37,9 +38,13 @@ export class AppComponent implements OnInit {
       (res: Artist) => {
         console.log(res);
         this.getArtists();
+        //clears form after submit
+        addForm.reset();
       },
       (error: HttpErrorResponse) => {
         alert(error.message);
+        //clears form even if error pops up
+        addForm.reset();
       }
     );
   }
@@ -54,6 +59,36 @@ export class AppComponent implements OnInit {
         alert(error.message);
       }
     );
+  }
+
+  public onDeleteArtist(artistId: number): void {
+    this.artistService.deleteArtist(artistId).subscribe(
+      (res: void) => {
+        console.log(res);
+        this.getArtists();
+      },
+      (error: HttpErrorResponse) => {
+        alert(error.message);
+      }
+    );
+  }
+
+  public searchArtists(key: string): void {
+    const results: Artist[] = [];
+    for (const artist of this.artists) {
+      if (
+        artist.name.toLowerCase().indexOf(key.toLowerCase()) !== -1 ||
+        artist.email.toLowerCase().indexOf(key.toLowerCase()) !== -1 ||
+        artist.phoneNumber.toLowerCase().indexOf(key.toLowerCase()) !== -1 ||
+        artist.jobTitle.toLowerCase().indexOf(key.toLowerCase()) !== -1
+      ) {
+        results.push(artist);
+      }
+    }
+    this.artists = results;
+    if (results.length === 0 || !key) {
+      this.getArtists();
+    }
   }
 
   public onOpenModal(artist: Artist, mode: string): void {
@@ -71,6 +106,7 @@ export class AppComponent implements OnInit {
       button.setAttribute('data-target', '#updateArtistModal');
     }
     if (mode === 'delete') {
+      this.deleteArtist = artist;
       button.setAttribute('data-target', '#deleteArtistModal');
     }
     container.appendChild(button);
